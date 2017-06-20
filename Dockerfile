@@ -1,54 +1,57 @@
-# Azurewind's PostgreSQL image with Chinese full text search
+# vim:set ft=dockerfile:
+FROM postgres:alpine
 
-FROM postgres
+# Uncomment the following command if you are in China, or preffer other mirror
+# RUN echo -e 'https://mirror.tuna.tsinghua.edu.cn/alpine/v3.5/main/' > /etc/apk/repositories
 
-# set source to china mirrors
-# --deplicted--..do not add "\" at end of line, in case that will merge
-# all lines to one and cause error running "apt-get update"
-# RUN echo "deb http://ftp2.cn.debian.org/debian/ jessie main non-free contrib \n\
-# deb http://ftp2.cn.debian.org/debian/ jessie-updates main non-free contrib \n\
-# deb http://ftp2.cn.debian.org/debian/ jessie-backports main non-free contrib \n\
-# deb http://ftp2.cn.debian.org/debian-security/ jessie/updates main non-free contrib \n\
-# deb-src http://ftp2.cn.debian.org/debian/ jessie main non-free contrib \n\
-# deb-src http://ftp2.cn.debian.org/debian/ jessie-updates main non-free contrib \n\
-# deb-src http://ftp2.cn.debian.org/debian/ jessie-backports main non-free contrib \n\
-# deb-src http://ftp2.cn.debian.org/debian-security/ jessie/updates main non-free contrib" > /etc/apt/sources.list
-
-# Uncomment the following command if you have bad internet connection
+# Uncomment the following 2 commands if you have bad internet connection
 # and first download the files into data directory
-# COPY data/pg_jieba.zip /pg_jieba.zip
+# COPY data/postgresql-9.6.3.tar.bz2 ./postgresql.tar.bz2
+# COPY data/pg_jieba-master.zip /pg_jieba-master.zip
 
-RUN apt-get update \
-  && apt-get install -y --no-install-recommends \
-      postgresql-server-dev-9.6 \
-      gcc \
-      make \
-      libc-dev \
-      g++ \
-      #libstdc++ \
-      #postgresql-server-dev-9.6 \
-      wget \
-      unzip \
-      ca-certificates \
-      openssl \
-	&& rm -rf /var/lib/apt/lists/*
 
-RUN wget -O pg_jieba.zip "https://github.com/jaiminpan/pg_jieba/archive/master.zip" \
+
+RUN set -ex \
+	\
+	&& apk add --no-cache --virtual .fetch-deps \
+		ca-certificates \
+		openssl \
+		tar \
+	&& wget -O pg_jieba-master.zip "https://github.com/jaiminpan/pg_jieba/archive/master.zip" \
+	&& wget -O postgresql.tar.bz2 "https://ftp.postgresql.org/pub/source/v$PG_VERSION/postgresql-$PG_VERSION.tar.bz2" \
+	&& echo "$PG_SHA256 *postgresql.tar.bz2" | sha256sum -c - \
+	&& mkdir -p /usr/src/postgresql \
+	&& tar \
+		--extract \
+		--file postgresql.tar.bz2 \
+		--directory /usr/src/postgresql \
+		--strip-components 1 \
+	&& rm postgresql.tar.bz2 \
+	\
+	&& apk add --no-cache --virtual .build-deps \
+		gcc \
+		g++ \
+		libc-dev \
+		make \
+	\
+	&& apk add --no-cache --virtual .rundeps \
+		libstdc++ \
   && cd / \
-  && unzip pg_jieba.zip \
+  && unzip pg_jieba-master.zip \
   && cd /pg_jieba-master \
   && USE_PGXS=1 make \
   && USE_PGXS=1 make install \
-  && echo "  \n\
+  && echo -e "  \n\
   # echo \"timezone = 'Asia/Shanghai'\" >> /var/lib/postgresql/data/postgresql.conf \n\
   echo \"shared_preload_libraries = 'pg_jieba.so'\" >> /var/lib/postgresql/data/postgresql.conf" \
   > /docker-entrypoint-initdb.d/init-dict.sh \
 # The following command is not required if load database from backup
-  && echo "CREATE EXTENSION pg_jieba;" > /docker-entrypoint-initdb.d/init-jieba.sql \
+  && echo -e "CREATE EXTENSION pg_jieba;" > /docker-entrypoint-initdb.d/init-jieba.sql \
 # RUN cp /usr/share/zoneinfo/Asia/Shanghai /etc/localtime \
 #   && echo "Asia/Shanghai" >  /etc/timezone
-  && apt-get purge -y gcc make libc-dev postgresql-server-dev-9.6 g++ \
-  && apt-get autoremove -y \
-  && rm -rf \
-    /pg_jieba-master
-
+    && apk del .build-deps .fetch-deps \
+	&& rm -rf \
+		/usr/src/postgresql \
+		/pg_jieba-master \
+		/pg_jieba-master.zip \
+	&& find /usr/local -name '*.a' -delete
