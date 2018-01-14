@@ -15,9 +15,12 @@ RUN set -ex \
 	\
 	&& apk add --no-cache --virtual .fetch-deps \
 		ca-certificates \
+                cmake \
+                git \
 		openssl \
 		tar \
-	&& wget -O pg_jieba-master.zip "https://github.com/jaiminpan/pg_jieba/archive/master.zip" \
+	# && wget -O pg_jieba-master.zip "https://github.com/jaiminpan/pg_jieba/archive/master.zip" \
+        && git clone https://github.com/jaiminpan/pg_jieba \
 	&& wget -O postgresql.tar.bz2 "https://ftp.postgresql.org/pub/source/v$PG_VERSION/postgresql-$PG_VERSION.tar.bz2" \
 	&& echo "$PG_SHA256 *postgresql.tar.bz2" | sha256sum -c - \
 	&& mkdir -p /usr/src/postgresql \
@@ -37,10 +40,17 @@ RUN set -ex \
 	&& apk add --no-cache --virtual .rundeps \
 		libstdc++ \
   && cd / \
-  && unzip pg_jieba-master.zip \
-  && cd /pg_jieba-master \
-  && USE_PGXS=1 make \
-  && USE_PGXS=1 make install \
+  # && unzip pg_jieba-master.zip \
+  # && cd /pg_jieba-master \
+  # && USE_PGXS=1 make \
+  # && USE_PGXS=1 make install \
+  && cd pg_jieba \
+  && git submodule update --init --recursive \
+  && mkdir build \
+  && cd build \
+  && cmake .. \
+  && make \
+  && make install \
   && echo -e "  \n\
   # echo \"timezone = 'Asia/Shanghai'\" >> /var/lib/postgresql/data/postgresql.conf \n\
   echo \"shared_preload_libraries = 'pg_jieba.so'\" >> /var/lib/postgresql/data/postgresql.conf" \
