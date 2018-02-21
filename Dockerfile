@@ -20,7 +20,7 @@ FROM postgres
 
 RUN apt-get update \
   && apt-get install -y --no-install-recommends \
-      postgresql-server-dev-9.6 \
+      postgresql-server-dev-$PG_VERSION \
       gcc \
       make \
       libc-dev \
@@ -47,7 +47,7 @@ RUN wget -O pg_jieba.zip "https://github.com/jaiminpan/pg_jieba/archive/master.z
   && echo "CREATE EXTENSION pg_jieba;" > /docker-entrypoint-initdb.d/init-jieba.sql \
 # RUN cp /usr/share/zoneinfo/Asia/Shanghai /etc/localtime \
 #   && echo "Asia/Shanghai" >  /etc/timezone
-  && apt-get purge -y gcc make libc-dev postgresql-server-dev-9.6 g++ \
+  && apt-get purge -y gcc make libc-dev postgresql-server-dev-$PG_VERSION g++ \
   && apt-get autoremove -y \
   && rm -rf \
     /pg_jieba-master
