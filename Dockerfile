@@ -9,7 +9,7 @@ RUN if [ $CN_MIRROR = 1 ] ; then OS_VER=$(grep main /etc/apk/repositories | sed 
 RUN apk update
 RUN apk add ca-certificates cmake git openssl tar 
 RUN apk add gcc g++ libc-dev make postgresql-dev libstdc++
-RUN git clone https://github.com/jaiminpan/pg_jieba
+RUN git clone --depth 1 https://github.com/jaiminpan/pg_jieba
 RUN cd /pg_jieba \
   && git submodule update --init --recursive
 RUN cd /pg_jieba \
