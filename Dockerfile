@@ -1,4 +1,5 @@
 # vim:set ft=dockerfile:
+# docker build -t chenxinaz/pg_jieba:alpine --build-arg CN_MIRROR=1 .
 FROM postgres:alpine as builder
 ARG CN_MIRROR=1
 
