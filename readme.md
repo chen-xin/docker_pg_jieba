@@ -22,7 +22,11 @@ How to use this image
 =====================
 
 To run this image, please refer to the [postgres docker image doc](https://store.docker.com/images/postgres).
-A basic command would be `docker run -p 5432:5432 chenxinaz/pg_jieba`.
+A basic command would be:
+
+```
+docker run --rm -e POSTGRES_PASSWORD=password --name pgtest -p 5432:5432 chenxinaz/pg_jieba
+```
 
 When the container runs first time, the follow scripts would be executed on the default database. You need to run them to configure pg_jieba for any other newly created databases :
 ```
