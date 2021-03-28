@@ -2,7 +2,7 @@
 # Azurewind's PostgreSQL image with Chinese full text searchi using pg_jieba
 # docker build -t chenxinaz/pg_jieba:alpine --build-arg CN_MIRROR=1 .
 
-FROM postgres:alpine as builder
+FROM postgres:13.2-alpine as builder
 ARG CN_MIRROR=1
 
 RUN if [ $CN_MIRROR = 1 ] ; then OS_VER=$(grep main /etc/apk/repositories | sed 's#/#\n#g' | grep "v[0-9]\.[0-9]") \
@@ -25,7 +25,7 @@ RUN cd /pg_jieba \
   && make install \
   && cat install_manifest.txt | xargs tar zcf pgjieba.tar.gz
 
-FROM postgres:alpine
+FROM postgres:13.2-alpine
 ARG CN_MIRROR=1
 
 COPY --from=builder /pg_jieba/build/pgjieba.tar.gz /
