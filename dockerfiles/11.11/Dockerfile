@@ -5,7 +5,6 @@
 FROM postgres:11.11 as builder
 ARG CN_MIRROR=1
 
-RUN if [ $CN_MIRROR = 1 ] ;
 RUN if [ $CN_MIRROR = 1 ] ; then \
 DEBIAN_VERSION=$(dpkg --status tzdata|grep Provides|cut -f2 -d'-') \
 DEBIAN_MIRROR=http://ftp.cn.debian.org/debian \
